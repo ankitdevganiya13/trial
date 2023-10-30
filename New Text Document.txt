@@ -1,0 +1,71 @@
+File file = SPIFFS.open("/WiFi.bin");
+      if(!file){
+        if(dBug != false){
+          Serial.println("Failed to open file for reading");
+	      }
+	      file.close();
+	      if(!SPIFFS.remove("/WiFi.bin")){
+          if(dBug != false){
+	          Serial.println("Not File Delete");
+          }
+	      }
+        ESP.restart();
+      }
+      else{
+        if(dBug != false){
+          Serial.println("Starting update..");
+        }
+        size_t fileS = file.size();
+        if(!Update.begin(fileS)){
+          if(dBug != false){
+            Serial.printf("Cannot do the update: %d\r\n",fileS);
+          }
+          ////////////////////////////////////////////////////
+          file.close();
+          if(!SPIFFS.remove("/WiFi.bin")){
+            if(dBug != false){
+              Serial.println("Not File Delete");
+            }
+          }
+          vTaskDelay(100);
+          // digitalWrite(RESET_PIN,LOW);
+          ESP.restart();
+          ////////////////////////////////////////////////////
+        }else{
+          Update.writeStream(file);
+          if(Update.end()){
+            if(dBug != false){
+              Serial.println("Successful update");
+            }
+            file.close();
+            if(!SPIFFS.remove("/WiFi.bin")){
+              if(dBug != false){
+                Serial.println("Not File Delete");
+              }
+              vTaskDelay(100);
+              // digitalWrite(RESET_PIN,LOW);
+              ESP.restart();
+              ////////////////////////////////////////////////////
+            }
+            else{
+              if(dBug != false){
+                Serial.println("Reset in 4 seconds...");
+              }
+              delay(4000);
+              // digitalWrite(RESET_PIN,LOW);
+              ESP.restart();
+            }
+          }else {
+            if(dBug != false){
+              Serial.println("Error Occurred: " + String(Update.getError()));
+            }
+            file.close();
+            if(!SPIFFS.remove("/WiFi.bin")){
+              if(dBug != false){
+                Serial.println("Not File Delete");
+              }
+            }
+            vTaskDelay(100);
+            // digitalWrite(RESET_PIN,LOW);
+            ESP.restart();
+            ////////////////////////////////////////////////////
